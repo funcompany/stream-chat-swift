@@ -37,10 +37,7 @@ open class ChannelsViewController: ViewController {
     open var presenter = ChannelsPresenter(filter: .currentUserInMembers) {
         didSet {
             reset()
-            
-            if isVisible {
-                setupChannelsPresenter()
-            }
+            setupChannelsPresenter()
         }
     }
     
