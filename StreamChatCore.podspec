@@ -9,15 +9,15 @@ Pod::Spec.new do |spec|
   spec.author = { "Alexey Bukhtin" => "alexey@getstream.io" }
   spec.social_media_url = "https://getstream.io"
   spec.swift_version = "5.1"
-  spec.platform = :ios, "11.0"
-  spec.source = { :git => "https://github.com/GetStream/stream-chat-swift.git", :tag => "#{spec.version}" }
+  spec.platform = :osx, "10.13"
+  spec.source = { :git => "https://github.com/funcompany/stream-chat-swift.git" }
   spec.requires_arc = true
 
   spec.source_files  = "Sources/Core/**/*.swift"
 
-  spec.framework = "Foundation", "UIKit"
-    
-  spec.dependency "StreamChatClient", "#{spec.version}"
+  spec.framework = "Foundation"
+  
+  spec.dependency "StreamChatClient"
   spec.dependency "RxSwift", "~> 5.1"
   spec.dependency "RxCocoa", "~> 5.1"
 end
