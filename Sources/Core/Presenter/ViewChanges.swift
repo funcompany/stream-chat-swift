@@ -6,7 +6,7 @@
 //  Copyright © 2019 Stream.io Inc. All rights reserved.
 //
 
-import UIKit
+//import UIKit
 import StreamChatClient
 
 /// A view changes.

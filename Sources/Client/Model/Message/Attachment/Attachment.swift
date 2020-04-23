@@ -6,8 +6,6 @@
 //  Copyright © 2019 Stream.io Inc. All rights reserved.
 //
 
-import UIKit
-
 /// A message attachment.
 public struct Attachment: Codable {
     private enum CodingKeys: String, CodingKey {
