@@ -6,7 +6,6 @@
 //  Copyright © 2019 Stream.io Inc. All rights reserved.
 //
 
-import UIKit
 
 /// A network client.
 public final class Client: Uploader {
@@ -16,7 +15,7 @@ public final class Client: Uploader {
     public typealias Progress = (Float) -> Void
     /// A WebSocket events callback type.
     public typealias OnEvent = (Event) -> Void
-    
+
     /// A client config (see `Config`).
     @available(*, deprecated, message: """
     Configuring the shared Client using the static `Client.config` variable has been deprecated. Please create an instance
@@ -70,7 +69,7 @@ public final class Client: Uploader {
         }
         configForSharedClient = config
     }
-    
+
     /// Stream API key.
     /// - Note: If you will change API key the Client will be disconnected and the current user will be logged out.
     ///         You have to setup another user after that.
@@ -80,27 +79,27 @@ public final class Client: Uploader {
             disconnect()
         }
     }
-    
+
     /// A base URL.
     public let baseURL: BaseURL
     let stayConnectedInBackground: Bool
     /// A database for an offline mode.
     public internal(set) var database: Database?
-    
+
     /// A log manager.
     public let logger: ClientLogger?
     public let logOptions: ClientLogger.Options
-    
+
     // MARK: Token
-    
+
     var token: Token?
     var tokenProvider: TokenProvider?
     /// Checks if the expired Token is updating.
     public internal(set) var isExpiredTokenInProgress = false // FIXME: Should be internal.
     var waitingRequests = [WaitingRequest]()
-    
+
     // MARK: WebSocket
-    
+
     /// A web socket client.
     private(set) lazy var webSocket: WebSocket = {
         let request = (try? makeWebSocketRequest(user: user, token: "")) ?? URLRequest(url: .placeholder)
@@ -120,18 +119,18 @@ public final class Client: Uploader {
     /// Check if API key and token are valid and the web socket is connected.
     public var isConnected: Bool { !apiKey.isEmpty && webSocket.isConnected }
     var needsToRecoverConnection = false
-    
+
     let defaultURLSessionConfiguration: URLSessionConfiguration
     lazy var urlSession = makeURLSession()
-    
+
     lazy var urlSessionTaskDelegate = ClientURLSessionTaskDelegate() // swiftlint:disable:this weak_delegate
     let callbackQueue: DispatchQueue?
-    
+
     private(set) lazy var eventsHandlingQueue = DispatchQueue(label: "io.getstream.Chat.clientEvents", qos: .userInteractive)
     let subscriptionBag = SubscriptionBag()
-    
+
     // MARK: User Events
-    
+
     /// The current user.
     public var user: User { userAtomic.get() }
     
@@ -140,14 +139,14 @@ public final class Client: Uploader {
     private(set) lazy var userAtomic = Atomic<User>(.anonymous, callbackQueue: eventsHandlingQueue) { [unowned self] newUser, _ in
         self.onUserUpdateObservers.values.forEach({ $0(newUser) })
     }
-    
+
     #if DEBUG
     /// Called when a new outgoing event is about to be sent. Meant to be used only for testing purposes.
     var outgoingEventsTestLogger: ((EventType) -> Void)?
     #endif
-    
+
     // MARK: Unread Count Events
-    
+
     /// Channels and messages unread counts.
     public var unreadCount: UnreadCount { unreadCountAtomic.get() }
     var onUnreadCountUpdateObservers = [String: OnUpdate<UnreadCount>]()
@@ -158,7 +157,7 @@ public final class Client: Uploader {
                 self.onUnreadCountUpdateObservers.values.forEach({ $0(newUnreadCount) })
             }
         }
-    
+
     /// Weak references to channels by cid.
     let watchingChannelsAtomic = Atomic<[ChannelId: [WeakRef<Channel>]]>([:])
     
@@ -195,21 +194,21 @@ public final class Client: Uploader {
             ClientLogger.log("💬", "", .info, "Stream Chat v.\(Environment.version)")
             ClientLogger.log("🔑", "", .info, apiKey)
             ClientLogger.log("🔗", "", .info, baseURL.description)
-            
+
             if let database = database {
                 ClientLogger.log("💽", "", .info, "\(database.self)")
             }
         }
-        
+
         #if DEBUG
         checkLatestVersion()
         #endif
     }
-    
+
     deinit {
         subscriptionBag.cancel()
     }
-    
+
     /// Handle a connection with an application state.
     /// - Note:
     ///   - Skip if the Internet is not available.
@@ -223,23 +222,23 @@ public final class Client: Uploader {
     /// - `.background` and `isConnected`
     ///   - `disconnectInBackground()`
     /// - Parameter appState: an application state.
-    func connect(appState: UIApplication.State = UIApplication.shared.applicationState,
+    func connect(appState: State = .active,
                  internetConnectionState: InternetConnection.State = InternetConnection.shared.state) {
         guard internetConnectionState == .available else {
             if internetConnectionState == .unavailable {
                 reset()
             }
-            
+
             return
         }
-        
+
         if appState == .active {
             webSocket.connect()
         } else if appState == .background, webSocket.isConnected {
             webSocket.disconnectInBackground()
         }
     }
-    
+
     /// Disconnect the web socket.
     public func disconnect() {
         logger?.log("Disconnecting deliberately...")
@@ -247,7 +246,7 @@ public final class Client: Uploader {
         Application.shared.onStateChanged = nil
         InternetConnection.shared.stopNotifier()
     }
-    
+
     /// Disconnect the websocket and reset states.
     func reset() {
         if webSocket.connectionId != nil {
@@ -258,13 +257,13 @@ public final class Client: Uploader {
         Message.flaggedIds.removeAll()
         User.flaggedUsers.removeAll()
         isExpiredTokenInProgress = false
-        
+
         performInCallbackQueue { [unowned self] in
             self.waitingRequests.forEach { $0.cancel() }
             self.waitingRequests = []
         }
     }
-    
+
     /// Checks if the given channel is watching.
     /// - Parameter channel: a channel.
     /// - Returns: returns true if the client is watching for the channel.
@@ -279,20 +278,20 @@ public final class Client: Uploader {
 extension Client {
     final class WaitingRequest: Cancellable {
         typealias Request = () -> Cancellable // swiftlint:disable:this nesting
-        
+
         private var subscription: Cancellable?
         private let request: Request
-        
+
         init(request: @escaping Request) {
             self.request = request
         }
-        
+
         func perform() {
             if subscription == nil {
                 subscription = request()
             }
         }
-        
+
         func cancel() {
             subscription?.cancel()
         }

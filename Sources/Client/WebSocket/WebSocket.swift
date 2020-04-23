@@ -6,6 +6,7 @@
 //  Copyright © 2019 Stream.io Inc. All rights reserved.
 //
 
+#if !os(macOS)
 import UIKit
 
 /// A web socket client.
@@ -17,13 +18,14 @@ final class WebSocket {
     static let incomingTypingStartEventTimeout: TimeInterval = 30
 
     weak var eventDelegate: WebSocketEventDelegate?
-    
+
     private var onEventObservers = [String: Client.OnEvent]()
     private(set) var provider: WebSocketProvider
     private let options: WebSocketOptions
     private let logger: ClientLogger?
     private var consecutiveFailures: TimeInterval = 0
     private var shouldReconnect = false
+    #if !os(macOS)
     private var backgroundTask: UIBackgroundTaskIdentifier = .invalid
     private(set) var connectionId: String?
     private(set) var eventError: ClientErrorResponse?
@@ -32,14 +34,14 @@ final class WebSocket {
         get { provider.request }
         set { provider.request = newValue }
     }
-    
+
     var connectionState: ConnectionState { connectionStateAtomic.get() }
     
     private lazy var connectionStateAtomic =
         Atomic<ConnectionState>(.notConnected, callbackQueue: nil) { [weak self] connectionState, _ in
             self?.publishEvent(.connectionChanged(connectionState))
     }
-    
+
     private lazy var handshakeTimer =
         Timer.scheduleRepeating(timeInterval: WebSocket.pingTimeInterval,
                                 queue: provider.callbackQueue) { [weak self] in
@@ -65,7 +67,7 @@ final class WebSocket {
         self.provider = provider
         self.provider.delegate = self
     }
-    
+
     deinit {
         if isConnected {
             logger?.log("💔 Disconnect on deinit")
@@ -77,7 +79,7 @@ final class WebSocket {
 // MARK: - Connection
 
 extension WebSocket {
-    
+
     /// Connect to web socket.
     /// - Note:
     ///     - Skip if the Internet is not available.
@@ -85,7 +87,7 @@ extension WebSocket {
     ///     - Skip if it's reconnecting.
     func connect() {
         cancelBackgroundWork()
-        
+
         if isConnected || connectionState == .connecting || connectionState == .reconnecting {
             if let logger = logger {
                 let reasons = [(isConnected ? " isConnected with connectionId = \(connectionId ?? "n/a")" : nil),
@@ -98,19 +100,19 @@ extension WebSocket {
             
             return
         }
-        
+
         if provider.isConnected {
             provider.disconnect()
         }
-        
+
         logger?.log("Connecting...")
         logger?.log(provider.request)
         connectionStateAtomic.set(.connecting)
         shouldReconnect = true
-        
+
         DispatchQueue.main.async(execute: provider.connect)
     }
-    
+
     private func reconnect() {
         guard connectionState != .reconnecting else {
             return
@@ -122,47 +124,50 @@ extension WebSocket {
         consecutiveFailures += 1
         let delay = TimeInterval.random(in: minDelay...maxDelay)
         logger?.log("⏳ Reconnect in \(delay) sec")
-        
+
         Timer.schedule(timeInterval: delay, queue: provider.callbackQueue) { [weak self] in
             self?.connectionStateAtomic.set(.notConnected)
             self?.connect()
         }
     }
-    
+
     func disconnectInBackground() {
         provider.callbackQueue.async(execute: disconnectInBackgroundInWebSocketQueue)
     }
-    
+
     private func disconnectInBackgroundInWebSocketQueue() {
         guard options.contains(.stayConnectedInBackground) else {
             disconnect(reason: "Going into background, stayConnectedInBackground is disabled")
             return
         }
-        
+        #if !os(macOS)
         if backgroundTask != .invalid {
             UIApplication.shared.endBackgroundTask(backgroundTask)
         }
-        
+
         backgroundTask = UIApplication.shared.beginBackgroundTask { [weak self] in
             self?.disconnect(reason: "Processing finished in background")
             self?.backgroundTask = .invalid
         }
-        
+
         if backgroundTask == .invalid {
             disconnect(reason: "Can't create a background task")
         }
+        #endif
+        disconnect(reason: "Processing finished in background")
     }
-    
+
     private func cancelBackgroundWork() {
         logger?.log("Cancelling background work...")
-        
+        #if !os(macOS)
         if backgroundTask != .invalid {
             UIApplication.shared.endBackgroundTask(backgroundTask)
             backgroundTask = .invalid
             logger?.log("💜 Background mode off")
         }
+        #endif
     }
-    
+
     func disconnect(reason: String) {
         shouldReconnect = false
         consecutiveFailures = 0
@@ -177,7 +182,7 @@ extension WebSocket {
             connectionStateAtomic.set(.disconnected(nil))
         }
     }
-    
+
     private func clearStateAfterDisconnect() {
         logger?.log("Clearing state after disconnect...")
         handshakeTimer.suspend()
@@ -189,7 +194,7 @@ extension WebSocket {
 // MARK: - Subscriptions
 
 extension WebSocket {
-    
+
     func subscribe(forEvents eventTypes: Set<EventType> = Set(EventType.allCases),
                    callback: @escaping Client.OnEvent) -> Cancellable {
         let subscription = Subscription { [weak self] uuid in
@@ -197,13 +202,13 @@ extension WebSocket {
                 self?.onEventObservers[uuid] = nil
             }
         }
-        
+
         let handler: Client.OnEvent = { event in
             if eventTypes.contains(event.type) {
                 callback(event)
             }
         }
-        
+
         provider.callbackQueue.async { [weak self] in
             self?.onEventObservers[subscription.uuid] = handler
             
@@ -212,10 +217,10 @@ extension WebSocket {
                 handler(.connectionChanged(connectionState))
             }
         }
-        
+
         return subscription
     }
-    
+
     private func publishEvent(_ event: Event) {
         provider.callbackQueue.async { [weak self] in
             if self?.eventDelegate?.shouldPublishEvent(event) ?? true {
@@ -259,48 +264,47 @@ extension WebSocket: WebSocketProviderDelegate {
             connectionStateAtomic.set(.connected(UserConnection(user: user, connectionId: connectionId)))
             return
         }
-        
+
         if isConnected {
             handleTypingEvent(event)
             publishEvent(event)
         }
     }
-    
+
     func websocketDidDisconnect(error: WebSocketProviderError?) {
         logger?.log("Parsing WebSocket disconnect... (error: \(error?.localizedDescription ?? "<nil>"))")
         clearStateAfterDisconnect()
-        
+
         if let eventError = eventError, eventError.code == ClientErrorResponse.tokenExpiredErrorCode {
             logger?.log("Disconnected. 🀄️ Token is expired")
             connectionStateAtomic.set(.disconnected(ClientError.expiredToken))
             return
         }
-        
+
         guard let error = error else {
             logger?.log("💔 Disconnected")
             connectionStateAtomic.set(.disconnected(nil))
-            
             if shouldReconnect {
                 reconnect()
             } else {
                 consecutiveFailures = 0
             }
-            
+
             return
         }
-        
+
         if isStopError(error) {
             logger?.log("💔 Disconnected with Stop code")
             consecutiveFailures = 0
             connectionStateAtomic.set(.disconnected(.websocketDisconnectError(error)))
             return
         }
-        
+
         logger?.log(error, message: "💔😡 Disconnected by error")
         logger?.log(eventError)
         ClientLogger.showConnectionAlert(error, jsonError: eventError)
         connectionStateAtomic.set(.disconnected(.websocketDisconnectError(error)))
-        
+
         if shouldReconnect {
             reconnect()
         }
@@ -318,57 +322,57 @@ extension WebSocket: WebSocketProviderDelegate {
         if error.code == WebSocketProviderError.stopErrorCode {
             return true
         }
-        
+
         return false
     }
-    
+
     private func parseEvent(with message: String) -> Event? {
         guard let data = message.data(using: .utf8) else {
             logger?.log("📦 Can't get a data from the message: \(message)", level: .error)
             return nil
         }
-        
+
         eventError = nil
-        
+
         do {
             let event = try JSONDecoder.default.decode(Event.self, from: data)
             consecutiveFailures = 0
-            
+
             // Skip pong events.
             if case .pong = event {
                 logger?.log("⬅️🏓", level: .info)
                 return nil
             }
-            
+
             // Log event.
             if let logger = logger {
                 var userId = ""
-                
+
                 if let user = event.user {
                     userId = user.isAnonymous ? " 👺" : " 👤 \(user.id)"
                 }
-                
+
                 if let cid = event.cid {
                     logger.log("\(event.type) 🆔 \(cid)\(userId)")
                 } else {
                     logger.log("\(event.type)\(userId)")
                 }
-                
+
                 logger.log(data)
             }
-            
+
             return event
-            
+
         } catch {
             if let errorContainer = try? JSONDecoder.default.decode(ErrorContainer.self, from: data) {
                 eventError = errorContainer.error
             } else {
                 logger?.log(error, message: "😡 Decode response")
             }
-            
+
             logger?.log(data, forceToShowData: true)
         }
-        
+
         return nil
     }
     

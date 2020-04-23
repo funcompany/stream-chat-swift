@@ -7,33 +7,33 @@
 //
 
 import Foundation
-import UIKit
+//import UIKit
 
 /// A Client logger.
 public final class ClientLogger {
-    
+
     /// A logger level.
     public enum Level: String, CustomStringConvertible {
         case error
         case debug
         case info
-        
+
         public var description: String {
             return rawValue.uppercased()
         }
-        
+
         static func level(_ options: Options) -> Level {
             if options.isError {
                 return .error
             }
-            
+
             if options.isDebug {
                 return .debug
             }
-            
+
             return .info
         }
-        
+
         func isEnabled(with level: Level) -> Bool {
             switch (self, level) {
             case (.error, .debug): return false
@@ -43,7 +43,7 @@ public final class ClientLogger {
             }
         }
     }
-    
+
     /// A client logger options.
     ///
     /// It has several levels: Error, Debug and Info.
@@ -56,7 +56,7 @@ public final class ClientLogger {
     ///  - full logs: `.info`
     public struct Options: OptionSet {
         public let rawValue: Int
-        
+
         /// Logs for requests 🐴. [Error]
         public static let requestsError = Options(rawValue: 1 << 0)
         /// Logs for a web socket 🦄. [Error]
@@ -65,7 +65,7 @@ public final class ClientLogger {
         public static let notificationsError = Options(rawValue: 1 << 2)
         /// Logs for a database 💽. [Error]
         public static let databaseError = Options(rawValue: 1 << 3)
-        
+
         /// Logs for requests 🐴. [Debug]
         public static let requests = Options(rawValue: 1 << 10)
         /// Logs for a web socket 🦄. [Debug]
@@ -74,7 +74,7 @@ public final class ClientLogger {
         public static let notifications = Options(rawValue: 1 << 12)
         /// Logs for a database 💽. [Debug]
         public static let database = Options(rawValue: 1 << 13)
-        
+
         /// Logs for requests 🐴. [Info]
         public static let requestsInfo = Options(rawValue: 1 << 20)
         /// Logs for a web socket 🦄. [Info]
@@ -84,37 +84,37 @@ public final class ClientLogger {
 
         /// All errors.
         public static let error: Options = [.requestsError, .webSocketError, .notificationsError, databaseError]
-        
+
         /// All debug logs.
         public static let debug: Options = [.requests, .webSocket, .notifications, .database]
-        
+
         /// Full logs.
         public static let info: Options = [.requestsInfo, .webSocketInfo, .notifications, .databaseInfo]
-        
+
         // FIXME: Shouldn't be like that.
         var isEnabled: Bool {
             return self.rawValue > 0
         }
-        
+
         /// Checks if the level is error.
         public var isError: Bool {
             return rawValue < (1 << 10)
         }
-        
+
         /// Checks if the level is debug.
         public var isDebug: Bool {
             return rawValue < (1 << 20)
         }
-        
+
         /// Checks if the level is info.
         public var isInfo: Bool {
             return rawValue < (1 << 31)
         }
-        
+
         public init(rawValue: Int) {
             self.rawValue = rawValue
         }
-        
+
         /// Create a logger with intersected log options.
         /// - Parameters:
         ///   - icon: a logger icon.
@@ -123,7 +123,7 @@ public final class ClientLogger {
             guard subOptions.isEnabled else {
                 return nil
             }
-            
+
             let intersectedOptions = intersection(subOptions)
             return intersectedOptions.isEnabled ? ClientLogger(icon: icon, level: .level(intersectedOptions)) : nil
         }
@@ -144,7 +144,7 @@ public final class ClientLogger {
     /// Checks if a user has overridden `logger` block.
     /// Needed for backwards compatibility.
     private static var usingLegacyLogger = false
-    
+
     /// A customizable logger block.
     /// By default error messages will print to the console, but you can customize it to use own logger.
     ///
@@ -206,12 +206,12 @@ public final class ClientLogger {
         
         print(message)
     }
-    
+
     private let icon: String
     private var lastTime: CFTimeInterval
     private var startTime: CFTimeInterval
     private let level: Level
-    
+
     /// Init a client logger.
     /// - Parameters:
     ///   - icon: a string icon.
@@ -222,13 +222,13 @@ public final class ClientLogger {
         startTime = CACurrentMediaTime()
         lastTime = startTime
     }
-    
+
     /// Log a request.
     ///
     /// - Parameter request: an URL request.
     public func log(_ request: URLRequest, isUploading: Bool = false) {
         log("➡️ \(request.httpMethod ?? "Request") \(request.description)")
-        
+
         if level.isEnabled(with: .debug),
             let url = request.url,
             url.query != nil,
@@ -236,11 +236,11 @@ public final class ClientLogger {
             let queryItems = urlComponents.queryItems {
             log(queryItems)
         }
-        
+
         if let bodyStream = request.httpBodyStream {
             log("Request Body Stream \(bodyStream.description)", level: .info)
         }
-        
+
         if level.isEnabled(with: .info), let body = request.httpBody {
             if isUploading {
                 log("📦 Uploading \(body.count / 1024) KB data...")
@@ -249,7 +249,7 @@ public final class ClientLogger {
             }
         }
     }
-    
+
     /// Log request headers.
     /// - Parameter headers: headers.
     public func log(headers: [String: String]?) {
@@ -259,7 +259,7 @@ public final class ClientLogger {
             log(message, level: .info)
         }
     }
-    
+
     /// Log URL query items.
     ///
     /// - Parameter queryItems: URL query items
@@ -267,26 +267,26 @@ public final class ClientLogger {
         guard !queryItems.isEmpty else {
             return
         }
-        
+
         var message = ""
-        
+
         queryItems.forEach { item in
             if let value = item.value,
                 value.hasPrefix("{"),
                 let data = value.data(using: .utf8),
                 let json = try? data.prettyPrintedJSONString() {
                 message += "▫️ \(item.name)=\(json)\n"
-                
+
             } else if item.name != "api_key" && item.name != "user_id" && item.name != "client_id" {
                 message += "▫️ \(item.description)\n"
             }
         }
-        
+
         if !message.isEmpty {
             log("URL query items:\n\(message)")
         }
     }
-    
+
     /// Log URL response.
     ///
     /// - Parameters:
@@ -299,18 +299,18 @@ public final class ClientLogger {
         } else if let response = response {
             log("⬅️❔ Unknown response (\(data?.description ?? "0 bytes")): \(response)")
         }
-        
+
         guard let data = data, (forceToShowData || level.isEnabled(with: .info)) else {
             return
         }
-        
+
         if let jsonString = try? data.prettyPrintedJSONString() {
             log("📦 \(jsonString)", level: forceToShowData ? .error : .info)
         } else if let dataString = String(data: data, encoding: .utf8) {
             log("📦 \"\(dataString)\"", level: forceToShowData ? .error : .info)
         }
     }
-    
+
     /// Log an error.
     ///
     /// - Parameters:
@@ -326,26 +326,26 @@ public final class ClientLogger {
             log("❌ \(message ?? "") \(error) in \(function)[\(line)]", level: .error)
         }
     }
-    
+
     /// Log a data as a pretty printed JSON string.
     /// - Parameter data: a data.
     public func log(_ data: Data?, message: String = "", forceToShowData: Bool = false) {
         guard forceToShowData || level.isEnabled(with: .info) else {
             return
         }
-        
+
         guard let data = data, !data.isEmpty else {
             log("📦 \(message) Data is empty", level: (forceToShowData ? .error : .info))
             return
         }
-        
+
         do {
             log("📦 \(message) " + (try data.prettyPrintedJSONString()), level: (forceToShowData ? .error : .info))
         } catch {
             log("📦 \(message) \(error)", level: (forceToShowData ? .error : .info))
         }
     }
-    
+
     /// Log a message with an identifier.
     ///
     /// - Parameters:
@@ -356,7 +356,7 @@ public final class ClientLogger {
             ClientLogger.log(icon, dateTime: Date().log, level: level, message)
         }
     }
-    
+
     /// Log a message.
     ///
     /// - Parameters:
@@ -400,11 +400,11 @@ public final class ClientLogger {
         #if DEBUG
         let jsonError = jsonError ?? ClientErrorResponse(code: 0, message: "<unknown>", statusCode: 0)
         let message = "\(jsonError.message)\n\nCode: \(jsonError.code)\nStatus Code: \(jsonError.statusCode)\n\n\(error)"
-        DispatchQueue.main.async {
-            let alert = UIAlertController(title: "Connection Error", message: message, preferredStyle: .alert)
-            alert.addAction(.init(title: "Ok, I'll check", style: .cancel, handler: nil))
-            UIApplication.shared.delegate?.window??.rootViewController?.present(alert, animated: true)
-        }
+//        DispatchQueue.main.async {
+//            let alert = UIAlertController(title: "Connection Error", message: message, preferredStyle: .alert)
+//            alert.addAction(.init(title: "Ok, I'll check", style: .cancel, handler: nil))
+//            UIApplication.shared.delegate?.window??.rootViewController?.present(alert, animated: true)
+//        }
         #endif
     }
 }
