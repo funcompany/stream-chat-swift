@@ -6,7 +6,7 @@
 //  Copyright © 2019 Stream.io Inc. All rights reserved.
 //
 
-import UIKit
+//import UIKit
 
 /// A network client.
 public final class Client: Uploader {

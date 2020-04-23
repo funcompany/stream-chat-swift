@@ -6,30 +6,31 @@
 //  Copyright © 2020 Stream.io Inc. All rights reserved.
 //
 
-import UIKit
+//import UIKit
+import Cocoa
 import StreamChatClient
 import RxSwift
 
-extension UIApplication {
+extension NSApplication {
     fileprivate static var rxApplicationStateKey: UInt8 = 0
 }
 
-extension Reactive where Base == UIApplication {
-    
+extension Reactive where Base == NSApplication {
+
     /// An application state.
-    public var state: Observable<UIApplication.State> {
-        associated(to: base, key: &UIApplication.rxApplicationStateKey) {
+    public var state: Observable<State> {
+        associated(to: base, key: &NSApplication.rxApplicationStateKey) {
             let center = NotificationCenter.default
-            
-            let notifications: [Observable<UIApplication.State>] =
-                [center.rx.notification(UIApplication.willEnterForegroundNotification).map({ _ in .inactive }),
-                 center.rx.notification(UIApplication.didBecomeActiveNotification).map({ _ in .active }),
-                 center.rx.notification(UIApplication.willResignActiveNotification).map({ _ in .inactive }),
-                 center.rx.notification(UIApplication.didEnterBackgroundNotification).map({ _ in .background })]
-            
+
+            let notifications: [Observable<State>] =
+                [center.rx.notification(NSApplication.willUnhideNotification).map({ _ in .inactive }),
+                 center.rx.notification(NSApplication.didBecomeActiveNotification).map({ _ in .active }),
+                 center.rx.notification(NSApplication.willResignActiveNotification).map({ _ in .inactive }),
+                 center.rx.notification(NSApplication.didHideNotification).map({ _ in .background })]
+
             return Observable.merge(notifications)
                 .subscribeOn(MainScheduler.instance)
-                .startWith(UIApplication.shared.applicationState)
+                .startWith(.active)
                 .share(replay: 1, scope: .forever)
         }
     }

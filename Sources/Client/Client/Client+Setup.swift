@@ -6,8 +6,6 @@
 //  Copyright © 2019 Stream.io Inc. All rights reserved.
 //
 
-import UIKit
-
 // MARK: Setup
 
 extension Client {

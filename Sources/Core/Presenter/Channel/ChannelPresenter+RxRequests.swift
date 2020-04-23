@@ -6,7 +6,6 @@
 //  Copyright © 2020 Stream.io Inc. All rights reserved.
 //
 
-import UIKit
 import StreamChatClient
 import RxSwift
 import RxCocoa
@@ -17,14 +16,14 @@ extension ChannelPresenter {
 }
 
 extension Reactive where Base == ChannelPresenter {
-    
+
     /// An observable `ViewChanges`.
     public var changes: Driver<ViewChanges> {
         associated(to: base, key: &ChannelPresenter.rxChangesKey) { [weak base] in
             guard let base = base else {
                 return .empty()
             }
-            
+
             return (base.channel.id.isEmpty
                 // Get a channel with a generated channel id.
                 ? base.channel.rx.query()
@@ -42,7 +41,7 @@ extension Reactive where Base == ChannelPresenter {
                     guard let base = base else {
                         return .empty()
                     }
-                    
+
                     return Driver.merge(
                         // Messages from requests.
                         base.isThread
@@ -56,7 +55,7 @@ extension Reactive where Base == ChannelPresenter {
                 })
         }
     }
-    
+
     var messagesRequest: Observable<ChannelResponse> {
         prepareRequest()
             .filter { [weak base] in !$0.isEmpty && base?.parentMessage == nil }
@@ -64,12 +63,12 @@ extension Reactive where Base == ChannelPresenter {
                 guard let base = base else {
                     return .empty()
                 }
-                
+
                 // Request for the fist page.
                 if pagination.limit != nil {
                     return base.channel.rx.query(messagesPagination: pagination, options: base.queryOptions).retry(3)
                 }
-                
+
                 // We need only the next page of messages.
                 // Skip members and default query options.
                 return base.channel.rx
@@ -77,17 +76,17 @@ extension Reactive where Base == ChannelPresenter {
                     .retry(3)
             })
     }
-    
+
     var parsedMessagesRequest: Driver<ViewChanges> {
         associated(to: base, key: &ChannelPresenter.rxParsedMessagesRequestKey) { [weak base] in
             guard let base = base else {
                 return .empty()
             }
-            
+
             return base.rx.parsedChannelResponse(base.rx.messagesRequest)
         }
     }
-    
+
     func parsedChannelResponse(_ channelResponse: Observable<ChannelResponse>) -> Driver<ViewChanges> {
         channelResponse
             .map { [weak base] in base?.parse(response: $0) ?? .none }
@@ -99,12 +98,12 @@ extension Reactive where Base == ChannelPresenter {
 }
 
 public extension Reactive where Base == ChannelPresenter {
-    
+
     /// An observable `Channel`.
     var channelDidUpdate: Driver<Channel> {
         base.channelPublishSubject.asDriver(onErrorJustReturn: Channel.unused)
     }
-    
+
     /// Create a message by sending a text.
     /// - Parameters:
     ///   - text: a message text.
@@ -117,26 +116,26 @@ public extension Reactive where Base == ChannelPresenter {
             .do(onNext: { [weak base] in base?.updateEphemeralMessage($0.message) })
             .observeOn(MainScheduler.instance)
     }
-    
+
     /// Send Read event if the app is active.
     /// - Returns: an observable completion.
     func markReadIfPossible() -> Observable<StreamChatClient.Event> {
         guard InternetConnection.shared.isAvailable, base.channel.readEventsEnabled else {
             return .empty()
         }
-        
+
         guard base.channel.isUnread else {
             Client.shared.logger?.log("🎫↩️ Skip mark read. \(base.channel.unreadCount) at "
                 + (base.channel.unreadMessageRead?.lastReadDate.description ?? "<NoLastReadDate>"))
             return .empty()
         }
-        
+
         return Observable.just(())
             .subscribeOn(MainScheduler.instance)
-            .filter { UIApplication.shared.applicationState == .active }
+//            .filter { UIApplication.shared.applicationState == .active }
             .flatMapLatest { [weak base] in base?.channel.rx.markRead() ?? .empty() }
     }
-    
+
     /// Dispatch an ephemeral message action, e.g. shuffle, send.
     /// - Parameters:
     ///   - action: an attachment action for the ephemeral message.
@@ -144,12 +143,12 @@ public extension Reactive where Base == ChannelPresenter {
     func dispatchEphemeralMessageAction(_ action: Attachment.Action, message: Message) -> Observable<MessageResponse> {
         if action.isCancelled || action.isSend {
             base.ephemeralSubject.onNext((nil, true))
-            
+
             if action.isCancelled {
                 return .empty()
             }
         }
-        
+
         return base.channel.rx.send(action: action, for: message)
             .do(onNext: { [weak base] in base?.updateEphemeralMessage($0.message) })
             .observeOn(MainScheduler.instance)
@@ -157,20 +156,20 @@ public extension Reactive where Base == ChannelPresenter {
 }
 
 private extension Reactive where Base == ChannelPresenter {
-    
+
     var repliesRequest: Observable<[Message]> {
         prepareRequest()
             .filter { [weak base] in !$0.isEmpty && base?.parentMessage != nil }
             .flatMapLatest { [weak base] in (base?.parentMessage?.rx.replies(pagination: $0) ?? .empty()).retry(3) }
     }
-    
+
     var webSocketEvents: Driver<ViewChanges> {
         Client.shared.rx.events(cid: base.channel.cid)
             .filter({ [weak base] event in
                 if let eventsFilter = base?.eventsFilter {
                     return eventsFilter(event, base?.channel)
                 }
-                
+
                 return true
             })
             .map { [weak base] in base?.parse(event: $0) ?? .none }
@@ -179,7 +178,7 @@ private extension Reactive where Base == ChannelPresenter {
             .filter { $0 != .none }
             .asClientDriver()
     }
-    
+
     var ephemeralMessageEvents: Driver<ViewChanges> {
         base.ephemeralSubject
             .skip(1)
@@ -187,7 +186,7 @@ private extension Reactive where Base == ChannelPresenter {
             .filter { $0 != .none }
             .asClientDriver()
     }
-    
+
     func parsedRepliesResponse(_ repliesResponse: Observable<[Message]>) -> Driver<ViewChanges> {
         repliesResponse
             .map { [weak base] in base?.parse(replies: $0) ?? .none }

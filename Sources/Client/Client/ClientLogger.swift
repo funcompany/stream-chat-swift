@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import UIKit
+//import UIKit
 
 /// A Client logger.
 public final class ClientLogger {

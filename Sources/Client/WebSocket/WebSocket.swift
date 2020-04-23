@@ -6,7 +6,9 @@
 //  Copyright © 2019 Stream.io Inc. All rights reserved.
 //
 
+#if !os(macOS)
 import UIKit
+#endif
 
 /// A web socket client.
 final class WebSocket {
@@ -24,7 +26,9 @@ final class WebSocket {
     private let logger: ClientLogger?
     private var consecutiveFailures: TimeInterval = 0
     private var shouldReconnect = false
+    #if !os(macOS)
     private var backgroundTask: UIBackgroundTaskIdentifier = .invalid
+    #endif
     private(set) var connectionId: String?
     private(set) var eventError: ClientErrorResponse?
     
@@ -138,7 +142,7 @@ extension WebSocket {
             disconnect(reason: "Going into background, stayConnectedInBackground is disabled")
             return
         }
-        
+        #if !os(macOS)
         if backgroundTask != .invalid {
             UIApplication.shared.endBackgroundTask(backgroundTask)
         }
@@ -151,16 +155,18 @@ extension WebSocket {
         if backgroundTask == .invalid {
             disconnect(reason: "Can't create a background task")
         }
+        #endif
     }
     
     private func cancelBackgroundWork() {
         logger?.log("Cancelling background work...")
-        
+        #if !os(macOS)
         if backgroundTask != .invalid {
             UIApplication.shared.endBackgroundTask(backgroundTask)
             backgroundTask = .invalid
             logger?.log("💜 Background mode off")
         }
+        #endif
     }
     
     func disconnect(reason: String) {
