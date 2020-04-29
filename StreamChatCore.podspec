@@ -16,7 +16,7 @@ Pod::Spec.new do |spec|
   spec.source_files  = "Sources/Core/**/*.swift"
 
   spec.framework = "Foundation"
-  
+
   spec.dependency "StreamChatClient"
   spec.dependency "RxSwift", "~> 5.1"
   spec.dependency "RxCocoa", "~> 5.1"
