@@ -15,15 +15,9 @@ Pod::Spec.new do |spec|
 
   spec.source_files  = "Sources/Core/**/*.swift"
 
-<<<<<<< HEAD
-  spec.framework = "Foundation", "UIKit"
-    
-  spec.dependency "StreamChatClient", "#{spec.version}"
-=======
   spec.framework = "Foundation"
 
   spec.dependency "StreamChatClient"
->>>>>>> try to support macos
   spec.dependency "RxSwift", "~> 5.1"
   spec.dependency "RxCocoa", "~> 5.1"
 end
