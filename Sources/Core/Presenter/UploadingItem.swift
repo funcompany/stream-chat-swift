@@ -6,7 +6,6 @@
 //  Copyright © 2020 Stream.io Inc. All rights reserved.
 //
 
-import UIKit
 import StreamChatClient
 import RxSwift
 
@@ -24,7 +23,7 @@ public final class UploadingItem: Equatable {
     /// An original file URL.
     public let url: URL?
     /// An original image.
-    public let image: UIImage?
+    public let image: NSImage?
     /// A gif data of the image.
     public let gifData: Data?
     /// A file name.
@@ -67,7 +66,7 @@ public final class UploadingItem: Equatable {
     public init(channel: Channel,
                 url: URL?,
                 type: UploadingType = .file,
-                image: UIImage? = nil,
+                image: NSImage? = nil,
                 gifData: Data? = nil,
                 fileName: String? = nil,
                 fileType: AttachmentFileType? = nil,
@@ -107,7 +106,7 @@ public final class UploadingItem: Equatable {
     ///     - previewImage: a preview of the uploaded image.
     ///     - previewImageGifData: a preview of the uploaded gif image data.
     @available(*, deprecated, message: "Please use `init(channel:url:)` initializer")
-    public init(attachment: Attachment, previewImage image: UIImage, previewImageGifData gifData: Data? = nil) {
+    public init(attachment: Attachment, previewImage image: NSImage, previewImageGifData gifData: Data? = nil) {
         channel = nil
         url = attachment.url
         type = .image
@@ -167,7 +166,7 @@ public final class UploadingItem: Equatable {
             mimeType = AttachmentFileType.gif.mimeType
         } else if let url = url, let localImageData = try? Data(contentsOf: url) {
             data = localImageData
-        } else if let encodedImageData = image?.jpegData(compressionQuality: 0.9) {
+        } else if let encodedImageData = image?.tiffRepresentation {
             data = encodedImageData
             mimeType = AttachmentFileType.jpeg.mimeType
         } else {
