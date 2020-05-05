@@ -70,7 +70,9 @@ extension ChannelPresenter {
             let viewChanges = ViewChanges.itemsAdded([nextRow], reloadRow, message.user.isCurrent, items)
             lastWebSocketEventViewChanges = viewChanges
             if #available(OSX 10.14, *) {
-                Notifications.shared.showIfNeeded(newMessage: message, in: channel)
+                // TODO: Travel, crash on some devices, since we donot need the buildin push for now, disable first
+                // https://stackoverflow.com/questions/46595434/ios-11-crashing-with-bundleproxy-nil-error-on-using-unusernotificationcenter
+//                Notifications.shared.showIfNeeded(newMessage: message, in: channel)
             } else {
                 // Fallback on earlier versions
             }
