@@ -108,13 +108,9 @@ public final class Client: Uploader {
     public var isConnected: Bool { !apiKey.isEmpty && webSocket.isConnected }
     var needsToRecoverConnection = false
 
-<<<<<<< HEAD
     let defaultURLSessionConfiguration: URLSessionConfiguration
     lazy var urlSession = URLSession(configuration: self.defaultURLSessionConfiguration)
 
-=======
-    lazy var urlSession = URLSession(configuration: .default)
->>>>>>> support macos
     lazy var urlSessionTaskDelegate = ClientURLSessionTaskDelegate() // swiftlint:disable:this weak_delegate
     let callbackQueue: DispatchQueue?
 
@@ -124,23 +120,12 @@ public final class Client: Uploader {
     // MARK: User Events
 
     /// The current user.
-<<<<<<< HEAD
     public var user: User { userAtomic.get() }
     
     var onUserUpdateObservers = [String: OnUpdate<User>]()
     
     private(set) lazy var userAtomic = Atomic<User>(.unknown, callbackQueue: eventsHandlingQueue) { [unowned self] newUser, _ in
         self.onUserUpdateObservers.values.forEach({ $0(newUser) })
-=======
-    public var user: User { userAtomic.get() ?? .unknown }
-
-    var onUserUpdateObservers = [String: OnUpdate<User>]()
-
-    private(set) lazy var userAtomic = Atomic<User>(callbackQueue: eventsHandlingQueue) { [unowned self] newUser, _ in
-        if let user = newUser {
-            self.onUserUpdateObservers.values.forEach({ $0(user) })
-        }
->>>>>>> support macos
     }
 
     // MARK: Unread Count Events
@@ -155,21 +140,12 @@ public final class Client: Uploader {
                 self.onUnreadCountUpdateObservers.values.forEach({ $0(newUnreadCount) })
             }
         }
-<<<<<<< HEAD
-    
+
     /// Weak references to channels by cid.
     let watchingChannelsAtomic = Atomic<[ChannelId: [WeakRef<Channel>]]>([:])
     
     /// Creates a new instance of the network client.
     ///
-=======
-    }
-
-    /// Weak references to channels by cid.
-    let watchingChannelsAtomic = Atomic<[ChannelId: [WeakRef<Channel>]]>([:])
-
-    /// Init a network client.
->>>>>>> support macos
     /// - Parameters:
     ///   - config: The configuration object with details of how the new instance should be set up.
     ///   - defaultURLSessionConfiguration: The base URLSession configuration `Client` uses for its
@@ -195,17 +171,6 @@ public final class Client: Uploader {
             }
         }
 
-<<<<<<< HEAD
-=======
-        self.apiKey = apiKey
-        self.baseURL = baseURL
-        self.callbackQueue = callbackQueue ?? .global(qos: .userInitiated)
-        self.stayConnectedInBackground = stayConnectedInBackground
-        self.database = database
-        self.logOptions = logOptions
-        logger = logOptions.logger(icon: "🐴", for: [.requestsError, .requests, .requestsInfo])
-
->>>>>>> support macos
         #if DEBUG
         checkLatestVersion()
         #endif
@@ -214,20 +179,7 @@ public final class Client: Uploader {
     deinit {
         subscriptionBag.cancel()
     }
-<<<<<<< HEAD
-    
-=======
 
-    private func checkAPIKey() {
-        if apiKey.isEmpty {
-            ClientLogger.logger("❌❌❌", "", "The Stream Chat Client didn't setup properly. "
-                + "You are trying to use it before setting up the API Key. "
-                + "Please use `Client.config = .init(apiKey:) to setup your api key. "
-                + "You can debug this issue by putting a breakpoint in \(#file)\(#line)")
-        }
-    }
-
->>>>>>> support macos
     /// Handle a connection with an application state.
     /// - Note:
     ///   - Skip if the Internet is not available.
