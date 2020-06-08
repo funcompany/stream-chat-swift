@@ -8,6 +8,7 @@
 
 #if !os(macOS)
 import UIKit
+#endif
 
 /// A web socket client.
 final class WebSocket {
@@ -27,6 +28,7 @@ final class WebSocket {
     private var shouldReconnect = false
     #if !os(macOS)
     private var backgroundTask: UIBackgroundTaskIdentifier = .invalid
+    #endif
     private(set) var connectionId: String?
     private(set) var eventError: ClientErrorResponse?
     

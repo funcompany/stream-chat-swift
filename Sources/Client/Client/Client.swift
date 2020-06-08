@@ -171,7 +171,7 @@ public final class Client: Uploader {
     init(config: Client.Config,
          defaultURLSessionConfiguration: URLSessionConfiguration = .default,
          defaultWebSocketProviderType: WebSocketProvider.Type = {
-        if #available(iOS 13, *) {
+        if #available(OSX 10.15, *) {
             return URLSessionWebSocketProvider.self
         }
         return StarscreamWebSocketProvider.self
