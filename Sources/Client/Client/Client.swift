@@ -197,7 +197,7 @@ public final class Client: Uploader {
         
         if let defaultWebSocketProviderType = defaultWebSocketProviderType {
             self.defaultWebSocketProviderType = defaultWebSocketProviderType
-        } else if #available(iOS 13, *) {
+        } else if #available(OSX 10.15, *) {
             switch config.webSocketProviderType {
             case .native:
                 self.defaultWebSocketProviderType = URLSessionWebSocketProvider.self
@@ -243,7 +243,7 @@ public final class Client: Uploader {
     /// - `.background` and `isConnected`
     ///   - `disconnectInBackground()`
     /// - Parameter appState: an application state.
-    func connect(appState: UIApplication.State = UIApplication.shared.applicationState,
+    func connect(appState: State = .active,
                  internetConnectionState: InternetConnection.State = InternetConnection.shared.state) {
         guard internetConnectionState == .available else {
             if internetConnectionState == .unavailable {

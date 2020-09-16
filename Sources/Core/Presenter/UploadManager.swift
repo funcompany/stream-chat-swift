@@ -6,7 +6,9 @@
 //  Copyright © 2019 Stream.io Inc. All rights reserved.
 //
 
+#if !os(macOS)
 import UIKit
+#endif
 import StreamChatClient
 import RxSwift
 

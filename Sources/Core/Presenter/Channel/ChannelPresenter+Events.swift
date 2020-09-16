@@ -76,7 +76,11 @@ extension ChannelPresenter {
             }
             
             lastWebSocketEventViewChanges = viewChanges
-            Notifications.shared.showIfNeeded(newMessage: message, in: channel)
+            if #available(OSX 10.14, *) {
+//                Notifications.shared.showIfNeeded(newMessage: message, in: channel)
+            } else {
+                // Fallback on earlier versions
+            }
             
             return viewChanges
             

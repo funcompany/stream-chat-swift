@@ -6,12 +6,15 @@
 //  Copyright © 2019 Stream.io Inc. All rights reserved.
 //
 
+#if !os(macOS)
 import UIKit
+#endif
 import UserNotifications
 import StreamChatClient
 import RxSwift
 
 /// A notifications manager.
+@available(OSX 10.14, *)
 public final class Notifications: NSObject {
     enum NotificationUserInfoKeys: String {
         case channelId = "channel_id"
@@ -93,7 +96,7 @@ public final class Notifications: NSObject {
     
     private func registerForPushNotifications() {
         DispatchQueue.main.async {
-            UIApplication.shared.registerForRemoteNotifications()
+            NSApplication.shared.registerForRemoteNotifications()
         }
         
         logger?.log("Register for remote notifications")
@@ -101,7 +104,7 @@ public final class Notifications: NSObject {
 }
 
 // MARK: - Message
-
+@available(OSX 10.14, *)
 extension Notifications {
     
     /// Show a notification with a given message from a channel if the app in the background.
@@ -115,7 +118,7 @@ extension Notifications {
         }
         
         DispatchQueue.main.async {
-            if UIApplication.shared.applicationState == .background {
+            if NSApplication.shared.isHidden {
                 self.logger?.log("Show channel: \(channel.cid) message id: \(message.id) text: \(message.textOrArgs)")
                 self.show(newMessage: message, in: channel)
             }
@@ -184,7 +187,7 @@ extension Notifications {
         content.title = "\(message.user.name) @ \(channel.name ?? "")"
         content.body = body
         content.sound = UNNotificationSound.default
-        content.badge = (UIApplication.shared.applicationIconBadgeNumber + 1) as NSNumber
+        content.badge = ((Int(NSApplication.shared.dockTile.badgeLabel ?? "") ?? 0) + 1) as NSNumber
         
         content.userInfo = [NotificationUserInfoKeys.channelId.rawValue: channel.id,
                             NotificationUserInfoKeys.channelType.rawValue: channel.type.rawValue,
@@ -195,7 +198,7 @@ extension Notifications {
 }
 
 // MARK: - UNUserNotificationCenterDelegate
-
+@available(OSX 10.14, *)
 extension Notifications: UNUserNotificationCenterDelegate {
     
     public func userNotificationCenter(_ center: UNUserNotificationCenter,
@@ -231,14 +234,14 @@ extension Notifications: UNUserNotificationCenterDelegate {
 }
 
 // MARK: - Clearing App Icon Badge Number
-
+@available(OSX 10.14, *)
 extension Notifications {
     
     func observeActiveAppStateForClearing() {
         DispatchQueue.main.async {
             self.clear()
             
-            UIApplication.shared.rx.state
+            NSApplication.shared.rx.state
                 .filter { $0 == .active }
                 .skip(1)
                 .subscribe(onNext: { [unowned self] _ in self.clear() })
@@ -247,7 +250,7 @@ extension Notifications {
     }
     
     func clear() {
-        UIApplication.shared.applicationIconBadgeNumber = 0
+        NSApplication.shared.dockTile.badgeLabel = ""
         notificationCenter.removeAllDeliveredNotifications()
         notificationCenter.removeAllPendingNotificationRequests()
         logger?.log("🧹 Notifications and the badge cleared")

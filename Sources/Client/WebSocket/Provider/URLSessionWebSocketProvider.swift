@@ -8,7 +8,7 @@
 
 import Foundation
 
-@available(iOS 13, *)
+@available(OSX 10.15, *)
 final class URLSessionWebSocketProvider: NSObject, WebSocketProvider, URLSessionDataDelegate, URLSessionWebSocketDelegate {
     
     private var task: URLSessionWebSocketTask?

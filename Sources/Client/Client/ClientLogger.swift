@@ -449,9 +449,11 @@ public final class ClientLogger {
         let jsonError = jsonError ?? ClientErrorResponse(code: 0, message: "<unknown>", statusCode: 0)
         let message = "\(jsonError.message)\n\nCode: \(jsonError.code)\nStatus Code: \(jsonError.statusCode)\n\n\(error)"
         DispatchQueue.main.async {
-            let alert = UIAlertController(title: "Connection Error", message: message, preferredStyle: .alert)
-            alert.addAction(.init(title: "Ok, I'll check", style: .cancel, handler: nil))
-            UIApplication.shared.delegate?.window??.rootViewController?.present(alert, animated: true)
+            let alert = NSAlert()
+            alert.messageText = "Connection Error"
+            alert.informativeText = message
+            alert.addButton(withTitle: "Ok, I'll check")
+            alert.runModal()
         }
         #endif
     }

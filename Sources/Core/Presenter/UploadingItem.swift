@@ -6,7 +6,9 @@
 //  Copyright © 2020 Stream.io Inc. All rights reserved.
 //
 
+#if !os(macOS)
 import UIKit
+#endif
 import StreamChatClient
 import RxSwift
 
@@ -18,13 +20,13 @@ public final class UploadingItem: Equatable {
         case video
         case file
     }
-    
+
     /// A channel for an uploading.
     public let channel: Channel?
     /// An original file URL.
     public let url: URL?
     /// An original image.
-    public let image: UIImage?
+    public let image: NSImage?
     /// A gif data of the image.
     public let gifData: Data?
     /// A file name.
@@ -45,7 +47,7 @@ public final class UploadingItem: Equatable {
     var uploading: Observable<ProgressResponse<URL>>?
     /// An observable uploading progress.
     let cancelUploading = PublishSubject<Void>()
-    
+
     /// A mime type.
     public private(set) var mimeType: String?
     /// Encoded data.
@@ -67,7 +69,7 @@ public final class UploadingItem: Equatable {
     public init(channel: Channel,
                 url: URL?,
                 type: UploadingType = .file,
-                image: UIImage? = nil,
+                image: NSImage? = nil,
                 gifData: Data? = nil,
                 fileName: String? = nil,
                 fileType: AttachmentFileType? = nil,
@@ -80,7 +82,7 @@ public final class UploadingItem: Equatable {
         self.gifData = gifData
         self.fileSize = fileSize > 0 ? fileSize : (url?.fileSize ?? 0)
         self.extraData = extraData
-        
+
         if let fileName = fileName {
             self.fileName = fileName
         } else if let url = url {
@@ -88,7 +90,7 @@ public final class UploadingItem: Equatable {
         } else {
             self.fileName = "unknown.jpeg"
         }
-        
+
         if let fileType = fileType {
             self.fileType = fileType
         } else if let url = url {
@@ -96,10 +98,10 @@ public final class UploadingItem: Equatable {
         } else {
             self.fileType = .jpeg
         }
-        
+
         try encodeData()
     }
-    
+
     /// Init an uploader item with a given uploaded image attachment.
     ///
     /// - Parameters:
@@ -107,7 +109,7 @@ public final class UploadingItem: Equatable {
     ///     - previewImage: a preview of the uploaded image.
     ///     - previewImageGifData: a preview of the uploaded gif image data.
     @available(*, deprecated, message: "Please use `init(channel:url:)` initializer")
-    public init(attachment: Attachment, previewImage image: UIImage, previewImageGifData gifData: Data? = nil) {
+    public init(attachment: Attachment, previewImage image: NSImage, previewImageGifData gifData: Data? = nil) {
         channel = nil
         url = attachment.url
         type = .image
@@ -138,14 +140,14 @@ public final class UploadingItem: Equatable {
         self.attachment = attachment
         extraData = nil
     }
-    
+
     private func encodeData() throws {
         guard type != .file, type != .video else {
             guard let url = url else {
                 error = .emptyBody(description: "Invalid URL: \(self.url?.absoluteString ?? "<unknown>")")
                 throw error!
             }
-            
+
             do {
                 self.mimeType = fileType.mimeType
                 data = try Data(contentsOf: url)
@@ -155,10 +157,10 @@ public final class UploadingItem: Equatable {
                                               error: error)
                 throw self.error!
             }
-            
+
             return
         }
-        
+
         var mimeType: String = fileType.mimeType
         let data: Data?
 
@@ -167,23 +169,23 @@ public final class UploadingItem: Equatable {
             mimeType = AttachmentFileType.gif.mimeType
         } else if let url = url, let localImageData = try? Data(contentsOf: url) {
             data = localImageData
-        } else if let encodedImageData = image?.jpegData(compressionQuality: 0.9) {
+        } else if let encodedImageData = image?.tiffRepresentation {
             data = encodedImageData
             mimeType = AttachmentFileType.jpeg.mimeType
         } else {
             let errorDescription = "For image: gifData = \(gifData == nil ? "no" : "yes"), "
                 + "URL = \(url?.absoluteString ?? "<none>"), "
                 + "image data: \(image?.description ?? "<none>")"
-            
+
             error = .emptyBody(description: errorDescription)
             data = nil
             throw error!
         }
-        
+
         self.mimeType = mimeType
         self.data = data
     }
-    
+
     public static func == (lhs: UploadingItem, rhs: UploadingItem) -> Bool {
         lhs.channel == rhs.channel
             && lhs.url == rhs.url
