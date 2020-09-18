@@ -1,8 +1,8 @@
 name: Stres Tests (v3)
 
-on:
-  schedule:
-    - cron: '0 1 * * *' # run at 1AM UTC
+# on:
+#   schedule:
+#     - cron: '0 1 * * *' # run at 1AM UTC
 
 jobs:
   v3-stress-tests:
