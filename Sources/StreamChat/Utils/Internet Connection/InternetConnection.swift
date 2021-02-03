@@ -40,7 +40,7 @@ class InternetConnection {
         
         if let monitor = monitor {
             self.monitor = monitor
-        } else if #available(iOS 12, *) {
+        } else if #available(OSX 10.14, *) {
             self.monitor = Monitor()
         } else {
             self.monitor = LegacyMonitor()
@@ -156,7 +156,7 @@ extension InternetConnection.Status {
 private extension InternetConnection {
     /// The default Internet connection monitor for iOS 12+.
     /// It uses Apple Network API.
-    @available(iOS 12, *)
+    @available(OSX 10.14, *)
     class Monitor: InternetConnectionMonitor {
         private var monitor: NWPathMonitor?
         
@@ -205,7 +205,7 @@ private extension InternetConnection {
             
             let quality: InternetConnection.Quality
             
-            if #available(iOS 13.0, *) {
+            if #available(OSX 10.15, *) {
                 quality = path.isConstrained ? .constrained : (path.isExpensive ? .expensive : .great)
             } else {
                 quality = path.isExpensive ? .expensive : .great
