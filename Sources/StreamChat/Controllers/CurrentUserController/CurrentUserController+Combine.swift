@@ -3,9 +3,8 @@
 //
 
 import Combine
-import UIKit
 
-@available(iOS 13, *)
+@available(OSX 10.15, *)
 extension _CurrentChatUserController {
     /// A publisher emitting a new value every time the current user changes.
     public var currentUserChangePublisher: AnyPublisher<EntityChange<_CurrentChatUser<ExtraData.User>>, Never> {
@@ -39,7 +38,7 @@ extension _CurrentChatUserController {
     }
 }
 
-@available(iOS 13, *)
+@available(OSX 10.15, *)
 extension _CurrentChatUserController.BasePublishers: _CurrentChatUserControllerDelegate {
     func currentUserController(
         _ controller: _CurrentChatUserController<ExtraData>,

@@ -2,10 +2,9 @@
 // Copyright © 2021 Stream.io Inc. All rights reserved.
 //
 
-import UIKit
 
 public enum SystemEnvironment {
-    static let systemName = UIDevice.current.systemName + UIDevice.current.systemVersion
+    static let systemName = (Host.current().name ?? "") + (Host.current().address ?? "")
     
     static var deviceModelName: String {
         var systemInfo = utsname()
