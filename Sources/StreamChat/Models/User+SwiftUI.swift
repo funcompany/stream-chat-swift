@@ -5,5 +5,5 @@
 import Foundation
 
 /// Protocol conformance needed for ActionSheet presenting.
-@available(iOS 13, *)
+@available(OSX 10.15, *)
 extension ChatUser: Identifiable {}
