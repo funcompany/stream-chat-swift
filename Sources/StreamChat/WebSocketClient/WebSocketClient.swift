@@ -2,7 +2,6 @@
 // Copyright © 2021 Stream.io Inc. All rights reserved.
 //
 
-import UIKit
 
 class WebSocketClient {
     /// Additional options for configuring web socket behavior.
@@ -170,14 +169,14 @@ class WebSocketClient {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleAppDidEnterBackground),
-            name: UIApplication.didEnterBackgroundNotification,
+            name: NSApplication.didResignActiveNotification,
             object: nil
         )
         
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleAppDidBecomeActive),
-            name: UIApplication.didBecomeActiveNotification,
+            name: NSApplication.didBecomeActiveNotification,
             object: nil
         )
     }
@@ -189,7 +188,7 @@ class WebSocketClient {
             self?.disconnect(source: .systemInitiated)
         }
         
-        if backgroundTask != .invalid {
+        if backgroundTask != 0 { // .invalid
             activeBackgroundTask = backgroundTask
         } else {
             // Can't initiate a background task, close the connection
@@ -229,7 +228,7 @@ extension WebSocketClient {
         var createPingController: CreatePingController = WebSocketPingController.init
         
         var createEngine: CreateEngine = {
-            if #available(iOS 13, *) {
+            if #available(OSX 10.15, *) {
                 return URLSessionWebSocketEngine(request: $0, sessionConfiguration: $1, callbackQueue: $2)
             } else {
                 return StarscreamWebSocketProvider(request: $0, sessionConfiguration: $1, callbackQueue: $2)
@@ -243,7 +242,7 @@ extension WebSocketClient {
             } else {
                 /// We can't use `UIApplication.shared` directly because there's no way to convince the compiler
                 /// this code is accessible only for non-extension executables.
-                return UIApplication.value(forKeyPath: "sharedApplication") as? UIApplication
+                return NSApp
             }
         }()
     }
@@ -372,13 +371,23 @@ struct WebSocketErrorContainer: Decodable {
     let error: ErrorPayload
 }
 
+typealias UIBackgroundTaskIdentifier = Int
+
 /// Used for starting and ending background tasks. `UIApplication` which conforms to `BackgroundTaskScheduler` automatically.
 protocol BackgroundTaskScheduler {
     func beginBackgroundTask(expirationHandler: (() -> Void)?) -> UIBackgroundTaskIdentifier
     func endBackgroundTask(_ identifier: UIBackgroundTaskIdentifier)
 }
 
-extension UIApplication: BackgroundTaskScheduler {}
+extension NSApplication: BackgroundTaskScheduler {
+    func beginBackgroundTask(expirationHandler: (() -> Void)?) -> UIBackgroundTaskIdentifier {
+        return 0 // .invalid
+    }
+    
+    func endBackgroundTask(_ identifier: UIBackgroundTaskIdentifier) {
+        
+    }
+}
 
 struct HealthCheckMiddleware: EventMiddleware {
     private(set) weak var webSocketClient: WebSocketClient?

@@ -3,9 +3,8 @@
 //
 
 import Combine
-import UIKit
 
-@available(iOS 13, *)
+@available(OSX 10.15, *)
 extension _ChatChannelController {
     /// A publisher emitting a new value every time the state of the controller changes.
     public var statePublisher: AnyPublisher<DataController.State, Never> {
@@ -63,7 +62,7 @@ extension _ChatChannelController {
     }
 }
 
-@available(iOS 13, *)
+@available(OSX 10.15, *)
 extension _ChatChannelController.BasePublishers: _ChatChannelControllerDelegate {
     func controller(_ controller: DataController, didChangeState state: DataController.State) {
         self.state.send(state)
