@@ -176,6 +176,10 @@ extension _ChatUser {
             extraData = .defaultValue
         }
         
+        if dto.id.isEmpty {
+            return _ChatUser(id: dto.id)
+        }
+        
         return _ChatUser(
             id: dto.id,
             name: dto.name,

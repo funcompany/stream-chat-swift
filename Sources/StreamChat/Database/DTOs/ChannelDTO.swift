@@ -253,7 +253,7 @@ extension _ChatChannel {
             createdAt: dto.createdAt,
             updatedAt: dto.updatedAt,
             deletedAt: dto.deletedAt,
-            createdBy: dto.createdBy.asModel(),
+            createdBy: dto.createdBy == nil ? nil : dto.createdBy.asModel(),
             config: try! JSONDecoder().decode(ChannelConfig.self, from: dto.config),
             isFrozen: dto.isFrozen,
             members: Set(members),
