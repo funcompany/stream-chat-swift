@@ -193,7 +193,7 @@ extension _ChatUser {
         }
         
         if dto.id.isEmpty {
-            return _ChatUser(id: dto.id)
+            return _ChatUser(id: dto.id, name: "error", imageURL: nil, isOnline: false, isBanned: false, isFlaggedByCurrentUser: false, userRole: .user, createdAt: Date(), updatedAt: Date(), lastActiveAt: nil, teams: [], extraData: extraData)
         }
         
         return _ChatUser(
