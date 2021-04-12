@@ -20,4 +20,5 @@ Pod::Spec.new do |spec|
   spec.framework = "Foundation"
 
   spec.dependency "Starscream", "~> 4.0"
+  spec.dependency 'DifferenceKit/AppKitExtension', :git => 'https://github.com/funcompany/DifferenceKit.git', :branch => 'travel-fixes', :commit => '85b244f6fbbbafce19965d3a2b24712ac2f31d79'
 end

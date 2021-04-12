@@ -3,6 +3,7 @@
 //
 
 import Foundation
+import DifferenceKit
 
 /// A unique identifier of a message.
 public typealias MessageId = String
@@ -295,3 +296,14 @@ public enum LocalMessageState: String {
 /// Learn more about using custom extra data in our [cheat sheet](https://github.com/GetStream/stream-chat-swift/wiki/Cheat-Sheet#working-with-extra-data).
 ///
 public protocol MessageExtraData: ExtraData {}
+
+
+extension _ChatMessage: Differentiable {
+    public var differenceIdentifier: String {
+        return id
+    }
+    
+    public func isContentEqual(to source: User) -> Bool {
+        return name == source.name
+    }
+}
