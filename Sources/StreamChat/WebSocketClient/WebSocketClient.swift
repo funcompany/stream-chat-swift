@@ -194,7 +194,8 @@ class WebSocketClient {
             activeBackgroundTask = backgroundTask
         } else {
             // Can't initiate a background task, close the connection
-            disconnect(source: .systemInitiated)
+            // No need for macos?
+//            disconnect(source: .systemInitiated)
         }
     }
     
