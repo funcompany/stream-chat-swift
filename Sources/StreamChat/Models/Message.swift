@@ -4,6 +4,7 @@
 
 import CoreData
 import Foundation
+import DifferenceKitFunCompany
 
 /// A unique identifier of a message.
 public typealias MessageId = String
@@ -43,7 +44,7 @@ public struct _ChatMessage<ExtraData: ExtraDataTypes> {
     
     /// Date when the message was created locally and scheduled to be send. Applies only for the messages of the current user.
     public let locallyCreatedAt: Date?
-
+    
     /// A date when the message was updated last time.
     public let updatedAt: Date
     
@@ -131,7 +132,7 @@ public struct _ChatMessage<ExtraData: ExtraDataTypes> {
     /// - Note: Please be aware that the value of this field is not persisted on the server,
     /// and is valid only locally for the current session.
     public let isFlaggedByCurrentUser: Bool
-
+    
     /// The latest reactions to the message created by any user.
     ///
     /// - Note: There can be `10` reactions at max.
@@ -149,7 +150,7 @@ public struct _ChatMessage<ExtraData: ExtraDataTypes> {
     
     /// `true` if the author of the message is the currently logged-in user.
     public let isSentByCurrentUser: Bool
-
+    
     /// The message pinning information. Is `nil` if the message is not pinned.
     public let pinDetails: _MessagePinDetails<ExtraData>?
     
@@ -265,10 +266,10 @@ public enum MessageType: String, Codable {
 public struct _MessagePinDetails<ExtraData: ExtraDataTypes> {
     /// Date when the message got pinned
     public let pinnedAt: Date
-
+    
     /// The user that pinned the message
     public let pinnedBy: _ChatUser<ExtraData.User>
-
+    
     /// Date when the message pin expires. An nil value means that message does not expire
     public let expiresAt: Date
 }
@@ -301,3 +302,14 @@ public enum LocalMessageState: String {
 /// Learn more about using custom extra data in our [cheat sheet](https://github.com/GetStream/stream-chat-swift/wiki/Cheat-Sheet#working-with-extra-data).
 ///
 public protocol MessageExtraData: ExtraData {}
+
+
+extension _ChatMessage: Differentiable {
+    public var differenceIdentifier: String {
+        return id
+    }
+    
+    public func isContentEqual(to source: _ChatMessage) -> Bool {
+        return text == source.text && extraData == source.extraData && updatedAt == source.updatedAt
+    }
+}

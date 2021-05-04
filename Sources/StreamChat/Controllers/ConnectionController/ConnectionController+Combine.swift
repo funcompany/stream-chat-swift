@@ -3,9 +3,8 @@
 //
 
 import Combine
-import UIKit
 
-@available(iOS 13, *)
+@available(OSX 10.15, *)
 extension _ChatConnectionController {
     /// A publisher emitting a new value every time the connection status changes.
     public var connectionStatusPublisher: AnyPublisher<ConnectionStatus, Never> {
@@ -31,7 +30,7 @@ extension _ChatConnectionController {
     }
 }
 
-@available(iOS 13, *)
+@available(OSX 10.15, *)
 extension _ChatConnectionController.BasePublishers: _ChatConnectionControllerDelegate {
     func connectionController(
         _ controller: _ChatConnectionController<ExtraData>,

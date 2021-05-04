@@ -4,6 +4,7 @@
 
 import Combine
 
+@available(OSX 10.15, *)
 @available(iOS 13.0, *)
 extension Publisher {
     /// A helper function which attaches the provided object to the publisher chain and keeps it alive as long
