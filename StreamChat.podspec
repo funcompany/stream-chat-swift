@@ -9,15 +9,16 @@ Pod::Spec.new do |spec|
   spec.author = { "getstream.io" => "support@getstream.io" }
   spec.social_media_url = "https://getstream.io"
   spec.swift_version = "5.2"
-  spec.platform = :ios, "11.0"
-  spec.source = { :git => "https://github.com/GetStream/stream-chat-swift.git", :tag => "#{spec.version}" }
+  spec.platform = :osx, "10.13"
+  spec.source = { :git => "https://github.com/funcompany/stream-chat-swift.git" }
   spec.requires_arc = true
 
   spec.source_files  = "Sources/StreamChat/**/*.swift"
   spec.exclude_files = ["Sources/StreamChat/**/*_Tests.swift", "Sources/StreamChat/**/*_Mock.swift"]
   spec.resource_bundles = { "StreamChat" => ["Sources/StreamChat/**/*.xcdatamodeld"] }
 
-  spec.framework = "Foundation", "UIKit"
+  spec.framework = "Foundation"
 
   spec.dependency "Starscream", "~> 4.0"
+  spec.dependency "DifferenceKitFunCompany/AppKitExtension"
 end
